@@ -7,7 +7,6 @@ from diffusers import StableDiffusionPipeline
 # Supported image formats
 pic_formats = ['.jpeg', '.jpg', '.png', '.JPEG', '.JPG', '.PNG']
 
-
 def check_folder(path):
     """Create a folder if it doesn't exist."""
     if not os.path.exists(path):
@@ -24,7 +23,7 @@ def load_cyberpunk_model(model_dir="model/DGSpitzer-Cyberpunk-Anime-Diffusion"):
 
 
 def process_cyberpunk_image(pipe, img_path):
-    """Generate a subtle cyberpunk-style enhancement for a face image."""
+    """Generate a subtle cyberpunk-style enhancement for a selfie image."""
     # Load and preprocess image
     image = cv2.imread(img_path)
     if image is None:
@@ -36,8 +35,8 @@ def process_cyberpunk_image(pipe, img_path):
     image = cv2.resize(image, (512, 512))
 
     # Generate the enhanced cyberpunk-style image with a specific prompt and adjusted settings
-    prompt = "close-up portrait of a person, cyberpunk style, neon glow, futuristic highlights, realistic detail"
-    result = pipe(prompt=prompt, init_image=image, strength=0.35, guidance_scale=8.0)
+    prompt = "cyberpunk-art, anime-art, transition-style, people"
+    result = pipe(prompt=prompt, init_image=image, strength=0.1, guidance_scale=5.0)
 
     # Convert to image format and return the result
     cyberpunk_img = np.array(result.images[0])

@@ -1,3 +1,4 @@
+ document.addEventListener('DOMContentLoaded', function() {
   const uploadForm = document.getElementById('uploadForm');
         const uploadedImageDiv = document.getElementById('uploadedImage');
         const captureBtn = document.getElementById('captureBtn');
@@ -11,10 +12,15 @@
         const selectBackgroundBtn = document.getElementById('selectBackgroundBtn');
         const colorOverlay = document.getElementById('colorOverlay');
         const resetBtn = document.getElementById('resetBtn');
+        const backgroundSelector = document.getElementById('backgroundSelector');
         let selectedImages = [];
         let previousImages = [];
         let originalImageSrc = null;
 
+         // Add "Anime Style Transfer" to the effect dropdown
+        const animeOption = document.createElement('option');
+        animeOption.value = 'anime';
+        effectSelect.appendChild(animeOption);
         // Access the camera for live preview
         navigator.mediaDevices.getUserMedia({ video: true })
             .then(stream => {
@@ -146,34 +152,66 @@ const displayUploadedImage = (imageSrc) => {
     previousImages.push(imgElement.src); // Track displayed images
 };
         // Apply selected effect
-  applyEffectBtn.addEventListener('click', async () => {
+ applyEffectBtn.addEventListener('click', async () => {
     const imgElement = uploadedImageDiv.querySelector('img');
     if (!imgElement) {
         alert('No image to apply effect to');
         return;
     }
+
     const filename = imgElement.src.split('/').pop();
     const effect = effectSelect.value;
     const color = (effect === 'color') ? colorPicker.value : null;
     const backgroundImage = selectedImages.length > 0 ? selectedImages[0] : null;
 
     try {
-        const response = await fetch('/process', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ filename, effect, color, background_image: backgroundImage })
-        });
-        const data = await response.json();
-        if (response.ok) {
-            const processedImg = document.createElement('img');
-            processedImg.src = `/uploads/${data.processed_filename}`;
-            uploadedImageDiv.innerHTML = '';
-            uploadedImageDiv.appendChild(processedImg);
+        let response;
+
+        if (effect === 'anime') {
+            response = await fetch('/process_anime', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ filename })
+            });
         } else {
-            alert(`Error: ${data.error}`);
+            // Use existing process endpoint for other effects
+            response = await fetch('/process', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ filename, effect, color, background_image: backgroundImage })
+            });
         }
+
+        const data = await response.json();
+      if (response.ok) {
+        // Processed image from uploads
+        const processedImg1 = document.createElement('img');
+        processedImg1.src = `/uploads/${data.processed_filename}`;
+
+        // Processed image from anime_output
+        const processedImg2 = document.createElement('img');
+        processedImg2.src = `/anime_output/${data.processed_filename}`;
+        const selectedEffect = document.getElementById('effect').value;
+
+        // Clear the previous images
+        uploadedImageDiv.innerHTML = '';
+
+        // Condition to append only one image
+        const appendProcessedImage1 = selectedEffect !== 'anime';
+        const appendProcessedImage2 = selectedEffect === 'anime';
+
+        if (appendProcessedImage1) {
+            uploadedImageDiv.appendChild(processedImg1);
+        } else if (appendProcessedImage2) {
+            uploadedImageDiv.appendChild(processedImg2);
+        }
+    } else {
+        alert(`Error: ${data.error}`);
+    }
     } catch (error) {
         console.error('Error applying effect:', error);
     }
@@ -228,13 +266,16 @@ resetBtn.addEventListener('click', () => {
         effectSelect.addEventListener('change', () => {
             if (effectSelect.value === 'color') {
                 colorPicker.style.display = 'block';
-                backgroundContainer.style.display = 'none'; // Hide background selector
+                backgroundContainer.style.display = 'none';
             } else if (effectSelect.value === 'background') {
-                colorPicker.style.display = 'none'; // Hide color picker
+                colorPicker.style.display = 'none';
                 backgroundContainer.style.display = 'block';
+            } else if (effectSelect.value === 'anime') {
+                colorPicker.style.display = 'none';
+                backgroundContainer.style.display = 'none';
             } else {
-                colorPicker.style.display = 'none'; // Hide color picker
-                backgroundContainer.style.display = 'none'; // Hide background selector
+                colorPicker.style.display = 'none';
+                backgroundContainer.style.display = 'none';
             }
         });
 
@@ -304,3 +345,4 @@ selectBackgroundBtn.addEventListener('click', async () => {
     }
 };
         loadSavedImages(); // Call to load saved images on page load
+});

@@ -48,8 +48,9 @@
     </form>
 
     <div id="uploadedImage">
-    <div id="colorOverlay"></div> <!-- Add this overlay div -->
+    <div id="colorOverlay"></div>
     </div>
+    <div id="imageContainer"></div>
 
     <!-- Camera Preview -->
     <h2>Camera Preview</h2>
@@ -73,6 +74,7 @@
         <option value="crop">Crop</option>
         <option value="color">Color</option>
         <option value="background">Background</option>
+        <option value="anime">Anime Style</option>
     </select>
     <button id="resetBtn">Reset</button>
     <button id="applyEffect">Apply Effect</button>
@@ -82,6 +84,7 @@
      <input type="file" id="backgroundImageInput" accept="image/*" style="display: none;">
     <div id="backgroundContainer"></div>
    <button id="selectBackgroundBtn" style="display: none;">Select Background</button>
-   <script src="/static/frontend.js"></script>
+
+    <script src="/static/frontend.js"></script>
 </body>
 </html>

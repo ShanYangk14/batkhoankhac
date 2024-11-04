@@ -71,7 +71,7 @@ def transform_images(model_path, image_folder, output_folder):
 
 # Update the model path and output folder path
 model_path = "model/AnimeGANv2/AnimeGANv2-master/pb_and_onnx_model/Shinkai_53.onnx"  # Path to your model file
-image_folder = "saved_images"  # Path to your folder containing images
+image_folder = "uploads"  # Path to your folder containing images
 output_folder = "anime_output"  # Path to your folder for saving anime-styled images
 
 # Start the transformation processtransform_images(model_path, image_folder, output_folder)
