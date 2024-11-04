@@ -202,6 +202,7 @@ def process_image():
 
     return jsonify({'processed_filename': processed_filename}), 200
 
+
 @app.route('/save', methods=['POST'])
 def save_image():
     data = request.json
@@ -210,16 +211,36 @@ def save_image():
     if not filename:
         return jsonify({'error': 'Filename not provided'}), 400
 
-    file_path = os.path.join(UPLOAD_FOLDER, filename)
-    saved_path = os.path.join(SAVED_IMAGES_FOLDER, filename)
+    # Define paths
+    file_path_upload = os.path.join(UPLOAD_FOLDER, filename)
+    file_path_anime = os.path.join(ANIME_OUTPUT_FOLDER, filename)
+    file_path_saved = os.path.join(SAVED_IMAGES_FOLDER, filename)
 
-    try:
-        os.rename(file_path, saved_path)
-    except Exception as e:
-        print(f"Error saving image: {e}")
-        return jsonify({'error': 'Failed to save image'}), 500
+    response = {}
 
-    return jsonify({'saved_filename': filename}), 200
+    # Try to move the file from UPLOAD_FOLDER to SAVED_IMAGES_FOLDER
+    if os.path.exists(file_path_upload):
+        try:
+            os.rename(file_path_upload, file_path_saved)
+            response['moved_from'] = 'UPLOAD_FOLDER'
+        except Exception as e:
+            print(f"Error moving image from upload to saved folder: {e}")
+            return jsonify({'error': 'Failed to move image from upload folder to saved folder'}), 500
+
+    # If not in UPLOAD_FOLDER, try moving it from ANIME_OUTPUT_FOLDER to SAVED_IMAGES_FOLDER
+    elif os.path.exists(file_path_anime):
+        try:
+            os.rename(file_path_anime, file_path_saved)
+            response['moved_from'] = 'ANIME_OUTPUT_FOLDER'
+        except Exception as e:
+            print(f"Error moving image from anime output to saved folder: {e}")
+            return jsonify({'error': 'Failed to move image from anime output folder to saved folder'}), 500
+
+    else:
+        # If file is in neither folder
+        return jsonify({'error': 'File not found in either folder'}), 404
+
+    return jsonify(response), 200
 
 @app.route('/delete', methods=['POST'])
 def delete_image():
@@ -228,17 +249,33 @@ def delete_image():
     if not filename:
         return jsonify({'error': 'Filename not provided'}), 400
 
-    file_path = os.path.join(UPLOAD_FOLDER, filename)
+    file_path_upload = os.path.join(UPLOAD_FOLDER, filename)
+    file_path_anime = os.path.join(ANIME_OUTPUT_FOLDER, filename)
 
-    if os.path.exists(file_path):
+    response = {}
+    # Delete file from UPLOAD_FOLDER if it exists
+    if os.path.exists(file_path_upload):
         try:
-            os.remove(file_path)
-            return jsonify({'deleted_filename': filename}), 200
+            os.remove(file_path_upload)
+            response['deleted_from_upload'] = filename
         except Exception as e:
-            print(f"Error deleting image: {e}")
-            return jsonify({'error': 'Failed to delete image'}), 500
+            print(f"Error deleting image from upload folder: {e}")
+            response['error_upload'] = 'Failed to delete image from upload folder'
 
-    return jsonify({'error': 'File not found'}), 404
+    # Delete file from ANIME_OUTPUT_FOLDER if it exists
+    if os.path.exists(file_path_anime):
+        try:
+            os.remove(file_path_anime)
+            response['deleted_from_anime'] = filename
+        except Exception as e:
+            print(f"Error deleting image from anime output folder: {e}")
+            response['error_anime'] = 'Failed to delete image from anime output folder'
+
+    # If no files were deleted
+    if 'deleted_from_upload' not in response and 'deleted_from_anime' not in response:
+        return jsonify({'error': 'File not found in either folder'}), 404
+
+    return jsonify(response), 200
 
 @app.route('/saved_images', methods=['GET'])
 def get_saved_images():
