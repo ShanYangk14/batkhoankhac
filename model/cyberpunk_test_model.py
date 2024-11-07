@@ -4,6 +4,10 @@ import numpy as np
 import torch
 from diffusers import StableDiffusionImg2ImgPipeline
 from PIL import Image
+from huggingface_hub import login
+
+token = "HUGGINGFACE_TOKEN"
+login(token)
 
 # Supported image formats
 pic_formats = ['.jpeg', '.jpg', '.png', '.JPEG', '.JPG', '.PNG']
@@ -38,15 +42,17 @@ def process_cyberpunk_image(pipe, img_path):
     print(f"Original image type (PIL): {type(pil_image)}")
 
     # Define the prompt (description of the art style you want)
-    prompt = "cyborg, cyberpunk art, cyberpunk 2077, 8k details, sharp high quality anime style, futuristic night city background"
+    prompt = (
+        "dgs illustration style, Anime fine details portrait in front of modern night city landscape on the background, anime masterpiece, 8k, sharp high quality anime"
+    )
 
     # Apply the Img2Img transformation with the prompt
     with torch.no_grad():
         generated_image_pil = pipe(
             prompt=prompt,
             image=pil_image,  # PIL.Image format
-            strength=0.35,
-            guidance_scale = 6.5
+            strength=0.36,
+            guidance_scale = 6.9
         ).images[0]
         print("Generated image from PIL format.")
 
@@ -76,7 +82,7 @@ def transform_images_cyberpunk(model_dir, image_folder, output_folder):
 
 # Define model path and directories
 model_dir = "DGSpitzer/Cyberpunk-Anime-Diffusion"
-image_folder = r"C:\Users\admin\PycharmProjects\batkhoankhac\saved_images"  # Folder containing the input images
+image_folder = r"C:\Users\admin\PycharmProjects\batkhoankhac\uploads"  # Folder containing the input images
 output_folder = r"C:\Users\admin\PycharmProjects\batkhoankhac\cyberpunk_output"  # Folder to save the generated cyberpunk-style images
 
 # Run the image transformation

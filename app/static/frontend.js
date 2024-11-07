@@ -164,10 +164,16 @@ const displayUploadedImage = (imageSrc) => {
     const color = (effect === 'color') ? colorPicker.value : null;
     const backgroundImage = selectedImages.length > 0 ? selectedImages[0] : null;
 
-    try {
-        let response;
-
-        if (effect === 'anime') {
+   try {
+        if (effect === 'cyberpunk') {
+            response = await fetch('/process_cyberpunk', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ filename })
+            });
+        } else if (effect === 'anime') {
             response = await fetch('/process_anime', {
                 method: 'POST',
                 headers: {
@@ -187,31 +193,27 @@ const displayUploadedImage = (imageSrc) => {
         }
 
         const data = await response.json();
+        console.log(data);
       if (response.ok) {
-        // Processed image from uploads
-        const processedImg1 = document.createElement('img');
-        processedImg1.src = `/uploads/${data.processed_filename}`;
+         uploadedImageDiv.innerHTML = '';  // Clear previous images
 
-        // Processed image from anime_output
-        const processedImg2 = document.createElement('img');
-        processedImg2.src = `/anime_output/${data.processed_filename}`;
-        const selectedEffect = document.getElementById('effect').value;
+            // Define paths based on effect
+            let processedImgSrc;
+            if (effect === 'cyberpunk') {
+                processedImgSrc = `/cyberpunk_output/${data.processed_filename}`;
+            } else if (effect === 'anime') {
+                processedImgSrc = `/anime_output/${data.processed_filename}`;
+            } else {
+                processedImgSrc = `/uploads/${data.processed_filename}`;
+            }
 
-        // Clear the previous images
-        uploadedImageDiv.innerHTML = '';
-
-        // Condition to append only one image
-        const appendProcessedImage1 = selectedEffect !== 'anime';
-        const appendProcessedImage2 = selectedEffect === 'anime';
-
-        if (appendProcessedImage1) {
-            uploadedImageDiv.appendChild(processedImg1);
-        } else if (appendProcessedImage2) {
-            uploadedImageDiv.appendChild(processedImg2);
+            // Append the processed image
+            const processedImg = document.createElement('img');
+            processedImg.src = processedImgSrc;
+            uploadedImageDiv.appendChild(processedImg);
+        } else {
+            alert(`Error: ${data.error}`);
         }
-    } else {
-        alert(`Error: ${data.error}`);
-    }
     } catch (error) {
         console.error('Error applying effect:', error);
     }

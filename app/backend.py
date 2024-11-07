@@ -1,10 +1,14 @@
+import torch
 from flask import Flask, request, jsonify, render_template, send_from_directory
 import os
 import sys
 import time
 import cv2
 import numpy as np
+from diffusers import StableDiffusionImg2ImgPipeline
 from model.Anime_test_model import transform_images, load_model, check_folder
+from model.cyberpunk_test_model import transform_images_cyberpunk, load_cyberpunk_model, check_folder, process_cyberpunk_image
+from huggingface_hub import login
 
 app = Flask(__name__)
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -13,22 +17,26 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'uploads')
 app.config['SAVED_IMAGES_FOLDER'] = os.path.join(os.getcwd(), 'saved_images')
 app.config['ANIME_OUTPUT_FOLDER'] = os.path.join(os.getcwd(), 'anime_output')
+app.config['CYBERPUNK_OUTPUT_FOLDER'] = os.path.join(os.getcwd(), 'cyberpunk_output')
 
 UPLOAD_FOLDER = app.config['UPLOAD_FOLDER']
 SAVED_IMAGES_FOLDER = app.config['SAVED_IMAGES_FOLDER']
 ANIME_OUTPUT_FOLDER = app.config['ANIME_OUTPUT_FOLDER']
+CYBERPUNK_OUTPUT_FOLDER = app.config['CYBERPUNK_OUTPUT_FOLDER']
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 if not os.path.exists(SAVED_IMAGES_FOLDER):
     os.makedirs(SAVED_IMAGES_FOLDER)
+if not os.path.exists(CYBERPUNK_OUTPUT_FOLDER):
+    os.makedirs(CYBERPUNK_OUTPUT_FOLDER)
 
 # Directory for saved images
 SAVED_IMAGES_FOLDER = os.path.join(os.getcwd(), 'saved_images')
 if not os.path.exists(SAVED_IMAGES_FOLDER):
     os.makedirs(SAVED_IMAGES_FOLDER)
 
-for folder in [app.config['UPLOAD_FOLDER'], app.config['SAVED_IMAGES_FOLDER'], app.config['ANIME_OUTPUT_FOLDER']]:
+for folder in [app.config['UPLOAD_FOLDER'], app.config['SAVED_IMAGES_FOLDER'], app.config['ANIME_OUTPUT_FOLDER'], app.config['CYBERPUNK_OUTPUT_FOLDER']]:
     if not os.path.exists(folder):
         os.makedirs(folder, exist_ok=True)
 PROCESSED_FOLDER = os.path.join(os.getcwd(), 'anime_output')
@@ -39,6 +47,18 @@ if not os.path.exists(PROCESSED_FOLDER):
 
 if not os.path.exists(app.config['ANIME_OUTPUT_FOLDER']):
     os.makedirs(app.config['ANIME_OUTPUT_FOLDER'])
+
+if not os.path.exists(app.config['CYBERPUNK_OUTPUT_FOLDER']):
+    os.makedirs(app.config['CYBERPUNK_OUTPUT_FOLDER'])
+
+for folder in [app.config['UPLOAD_FOLDER'], app.config['SAVED_IMAGES_FOLDER'], app.config['CYBERPUNK_OUTPUT_FOLDER']]:
+    if not os.path.exists(folder):
+        os.makedirs(folder, exist_ok=True)
+PROCESSED_FOLDER = os.path.join(os.getcwd(), 'cyberpunk_output')
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+if not os.path.exists(PROCESSED_FOLDER):
+    os.makedirs(PROCESSED_FOLDER)
 
 # Initialize the ONNX model session
 model_path = "model/AnimeGANv2/AnimeGANv2-master/pb_and_onnx_model/Shinkai_53.onnx"
@@ -126,7 +146,6 @@ def process_image():
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
     print(f"Detected faces: {faces}")
-
     face_mask = np.zeros(img.shape[:2], dtype=np.uint8)
     # Initialize processed_filename
     processed_filename = None
@@ -202,7 +221,6 @@ def process_image():
 
     return jsonify({'processed_filename': processed_filename}), 200
 
-
 @app.route('/save', methods=['POST'])
 def save_image():
     data = request.json
@@ -242,6 +260,7 @@ def save_image():
 
     return jsonify(response), 200
 
+
 @app.route('/delete', methods=['POST'])
 def delete_image():
     data = request.json
@@ -251,29 +270,41 @@ def delete_image():
 
     file_path_upload = os.path.join(UPLOAD_FOLDER, filename)
     file_path_anime = os.path.join(ANIME_OUTPUT_FOLDER, filename)
+    file_path_cyberpunk = os.path.join(CYBERPUNK_OUTPUT_FOLDER, filename)
 
     response = {}
-    # Delete file from UPLOAD_FOLDER if it exists
+
+    # Attempt to delete file from UPLOAD_FOLDER
     if os.path.exists(file_path_upload):
         try:
             os.remove(file_path_upload)
             response['deleted_from_upload'] = filename
         except Exception as e:
             print(f"Error deleting image from upload folder: {e}")
-            response['error_upload'] = 'Failed to delete image from upload folder'
+            response['error_upload'] = 'Failed to delete from upload folder'
 
-    # Delete file from ANIME_OUTPUT_FOLDER if it exists
+    # Attempt to delete file from ANIME_OUTPUT_FOLDER
     if os.path.exists(file_path_anime):
         try:
             os.remove(file_path_anime)
             response['deleted_from_anime'] = filename
         except Exception as e:
             print(f"Error deleting image from anime output folder: {e}")
-            response['error_anime'] = 'Failed to delete image from anime output folder'
+            response['error_anime'] = 'Failed to delete from anime output folder'
 
-    # If no files were deleted
-    if 'deleted_from_upload' not in response and 'deleted_from_anime' not in response:
-        return jsonify({'error': 'File not found in either folder'}), 404
+    # Attempt to delete file from CYBERPUNK_OUTPUT_FOLDER
+    if os.path.exists(file_path_cyberpunk):
+        try:
+            os.remove(file_path_cyberpunk)
+            response['deleted_from_cyberpunk'] = filename
+        except Exception as e:
+            print(f"Error deleting image from cyberpunk output folder: {e}")
+            response['error_cyberpunk'] = 'Failed to delete from cyberpunk output folder'
+
+    # If file wasn't found in any folder
+    if 'deleted_from_upload' not in response and 'deleted_from_anime' not in response and 'deleted_from_cyberpunk' not in response:
+        response['error'] = 'File not found in any folder'
+        return jsonify(response), 404
 
     return jsonify(response), 200
 
@@ -309,6 +340,61 @@ def process_anime_image():
 @app.route('/anime_output/<filename>')
 def anime_output_file(filename):
     return send_from_directory(app.config['ANIME_OUTPUT_FOLDER'], filename)
+
+def load_cyberpunk_model(model_id="DGSpitzer/Cyberpunk-Anime-Diffusion", token="HUGGINGFACE_TOKEN"):
+    """Load the Cyberpunk diffusion model."""
+    login(token)  # Ensure login happens here
+    pipe = StableDiffusionImg2ImgPipeline.from_pretrained(model_id)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    pipe = pipe.to(device)
+    return pipe
+
+@app.route('/process_cyberpunk', methods=['POST'])
+def process_cyberpunk_image():
+    try:
+        # Get the input image and effect details from the request
+        data = request.json
+        filename = data.get('filename')
+
+        # Ensure valid values for image_folder and output_folder, use defaults if not provided
+        image_folder = data.get('image_folder', UPLOAD_FOLDER)
+        output_folder = data.get('output_folder', CYBERPUNK_OUTPUT_FOLDER)
+        model_dir = data.get('model_dir', 'DGSpitzer/Cyberpunk-Anime-Diffusion')
+
+        if not filename:
+            return jsonify({"error": "No filename provided"}), 400
+
+        # Retrieve the file path from the provided image folder
+        img_path = os.path.join(image_folder, filename)
+        img = cv2.imread(img_path)
+
+        if img is None:
+            return jsonify({"error": "Could not read the uploaded image"}), 404
+
+        # Call the transform_images_cyberpunk function from cyberpunk_test_model.py
+        transform_images_cyberpunk(model_dir, image_folder, output_folder)
+
+        # Construct the path to the processed image
+        processed_image_path = os.path.join(output_folder, filename)
+
+        # Debug: Log the processed image path
+        print(f"Processed image saved at: {processed_image_path}")
+
+        if not os.path.exists(processed_image_path):
+            return jsonify({"error": "Processed image not found after transformation"}), 404
+
+        return jsonify({
+            "message": "Image processed successfully",
+            "processed_image_path": processed_image_path
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/cyberpunk_output/<filename>')
+def serve_cyberpunk_image(filename):
+    # Ensure the correct folder is being served
+    return send_from_directory(os.path.join(app.root_path, 'cyberpunk_output'), filename)
 
 if __name__ == '__main__':
     app.run(debug=True)
