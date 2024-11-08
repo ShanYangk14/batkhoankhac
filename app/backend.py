@@ -351,50 +351,31 @@ def load_cyberpunk_model(model_id="DGSpitzer/Cyberpunk-Anime-Diffusion", token="
 
 @app.route('/process_cyberpunk', methods=['POST'])
 def process_cyberpunk_image():
+    data = request.json
+    filename = data.get('filename')
+    img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+    if not filename or not os.path.exists(img_path):
+        return jsonify({"error": "Image not found"}), 404
+
     try:
-        # Get the input image and effect details from the request
-        data = request.json
-        filename = data.get('filename')
+        # Ensure the transform function parameters match the intended use for cyberpunk transformation
+        transform_images_cyberpunk(
+            model_dir=app.config.get('CYBERPUNK_MODEL_PATH', 'DGSpitzer/Cyberpunk-Anime-Diffusion'),
+            image_folder=app.config['UPLOAD_FOLDER'],
+            output_folder=app.config['CYBERPUNK_OUTPUT_FOLDER']
+        )
 
-        # Ensure valid values for image_folder and output_folder, use defaults if not provided
-        image_folder = data.get('image_folder', UPLOAD_FOLDER)
-        output_folder = data.get('output_folder', CYBERPUNK_OUTPUT_FOLDER)
-        model_dir = data.get('model_dir', 'DGSpitzer/Cyberpunk-Anime-Diffusion')
-
-        if not filename:
-            return jsonify({"error": "No filename provided"}), 400
-
-        # Retrieve the file path from the provided image folder
-        img_path = os.path.join(image_folder, filename)
-        img = cv2.imread(img_path)
-
-        if img is None:
-            return jsonify({"error": "Could not read the uploaded image"}), 404
-
-        # Call the transform_images_cyberpunk function from cyberpunk_test_model.py
-        transform_images_cyberpunk(model_dir, image_folder, output_folder)
-
-        # Construct the path to the processed image
-        processed_image_path = os.path.join(output_folder, filename)
-
-        # Debug: Log the processed image path
-        print(f"Processed image saved at: {processed_image_path}")
-
-        if not os.path.exists(processed_image_path):
-            return jsonify({"error": "Processed image not found after transformation"}), 404
-
-        return jsonify({
-            "message": "Image processed successfully",
-            "processed_image_path": processed_image_path
-        }), 200
-
+        # Generate a filename for the processed image to ensure it matches the format you expect
+        output_filename = f"cyberpunk_{filename}"
+        return jsonify({'processed_filename': output_filename}), 200
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"Failed to process image: {str(e)}"}), 500
 
 @app.route('/cyberpunk_output/<filename>')
 def serve_cyberpunk_image(filename):
     # Ensure the correct folder is being served
-    return send_from_directory(os.path.join(app.root_path, 'cyberpunk_output'), filename)
+    return send_from_directory(app.config['CYBERPUNK_OUTPUT_FOLDER'], filename)
 
 if __name__ == '__main__':
     app.run(debug=True)
