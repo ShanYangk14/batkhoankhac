@@ -41,7 +41,7 @@ SAVED_IMAGES_FOLDER = os.path.join(os.getcwd(), 'saved_images')
 if not os.path.exists(SAVED_IMAGES_FOLDER):
     os.makedirs(SAVED_IMAGES_FOLDER)
 
-for folder in [app.config['UPLOAD_FOLDER'], app.config['SAVED_IMAGES_FOLDER'], app.config['ANIME_OUTPUT_FOLDER'], app.config['CYBERPUNK_OUTPUT_FOLDER']]:
+for folder in [app.config['UPLOAD_FOLDER'], app.config['SAVED_IMAGES_FOLDER'], app.config['ANIME_OUTPUT_FOLDER'], app.config['CYBERPUNK_OUTPUT_FOLDER'], app.config['ARCANE_OUTPUT_FOLDER']]:
     if not os.path.exists(folder):
         os.makedirs(folder, exist_ok=True)
 PROCESSED_FOLDER = os.path.join(os.getcwd(), 'anime_output')

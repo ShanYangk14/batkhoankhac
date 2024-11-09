@@ -3,6 +3,10 @@
         const uploadedImageDiv = document.getElementById('uploadedImage');
         const captureBtn = document.getElementById('captureBtn');
         const video = document.getElementById('video');
+        const brightnessSlider = document.getElementById('brightness');
+        const contrastSlider = document.getElementById('contrast');
+        const brightnessValueDisplay = document.getElementById('brightnessValue');
+        const contrastValueDisplay = document.getElementById('contrastValue');
         const saveBtn = document.getElementById('saveBtn');
         const deleteBtn = document.getElementById('deleteBtn');
         const effectSelect = document.getElementById('effect');
@@ -29,6 +33,22 @@
             .catch(error => {
                 console.error('Error accessing camera:', error);
             });
+            function updateVideoFilters() {
+            const brightness = brightnessSlider.value;
+            const contrast = contrastSlider.value;
+            video.style.filter = `brightness(${parseFloat(brightness) / 100 + 1}) contrast(${contrast})`;
+            brightnessValueDisplay.textContent = brightness;
+            contrastValueDisplay.textContent = contrast;
+        }
+        function updateFiltersForImage(imageElement) {
+            const brightness = brightnessSlider.value;
+            const contrast = contrastSlider.value;
+            imageElement.style.filter = `brightness(${parseFloat(brightness) / 100 + 1}) contrast(${contrast})`;
+        }
+
+        // Event listeners for brightness and contrast sliders
+        brightnessSlider.addEventListener('input', updateVideoFilters);
+        contrastSlider.addEventListener('input', updateVideoFilters);
 
         // Handle file upload
         uploadForm.addEventListener('submit', async (event) => {
@@ -55,14 +75,24 @@
             }
         });
 
-        // Capture image from video stream
-        captureBtn.addEventListener('click', async () => {
+       captureBtn.addEventListener('click', async () => {
+            // Create a canvas and set its dimensions to match the video
             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             const ctx = canvas.getContext('2d');
+
+            // Get the current brightness and contrast values
+            const brightness = brightnessSlider.value;
+            const contrast = contrastSlider.value;
+
+            // Apply the filters to the canvas context
+            ctx.filter = `brightness(${parseFloat(brightness) / 100 + 1}) contrast(${contrast})`;
+
+            // Draw the video frame to the canvas with the applied filters
             ctx.drawImage(video, 0, 0);
 
+            // Convert the canvas to a data URL and send it to the server
             const dataUrl = canvas.toDataURL('image/png');
             const blob = await fetch(dataUrl).then(res => res.blob());
 
@@ -148,6 +178,9 @@ const displayUploadedImage = (imageSrc) => {
     imgElement.src = imageSrc;
     uploadedImageDiv.appendChild(imgElement);
 
+     // Apply brightness and contrast to the displayed image
+    updateFiltersForImage(imgElement);
+
     // Store previous images
     previousImages.push(imgElement.src); // Track displayed images
 };
@@ -221,6 +254,17 @@ const displayUploadedImage = (imageSrc) => {
             const processedImg = document.createElement('img');
             processedImg.src = processedImgSrc;
             uploadedImageDiv.appendChild(processedImg);
+
+             // Apply brightness and contrast to processed image
+            updateFiltersForImage(processedImg);
+
+             // Save original image if it's the first effect
+            if (previousImages.length === 0 && !originalImageSrc) {
+                originalImageSrc = imgElement.src; // Set original image
+            }
+
+            // Push the processed image to previousImages
+            previousImages.push(processedImgSrc);
         } else {
             alert(`Error: ${data.error}`);
         }
@@ -230,20 +274,29 @@ const displayUploadedImage = (imageSrc) => {
 });
 
 resetBtn.addEventListener('click', () => {
-            if (previousImages.length > 1) {
-                previousImages.pop(); // Remove the current image
-                const lastImageSrc = previousImages[previousImages.length - 1]; // Get the last image
-                displayUploadedImage(lastImageSrc); // Restore the last image
+    if (previousImages.length > 0) {
+        previousImages.pop(); // Remove the current image from history
+        const lastImageSrc = previousImages.length > 0 ? previousImages[previousImages.length - 1] : originalImageSrc; // Get the previous image or original image
+        displayUploadedImage(lastImageSrc); // Restore the previous image or original
 
-                // Clear selections
-                selectedImages = [];
-                Array.from(backgroundContainer.children).forEach(img => {
-                    img.style.border = 'none'; // Remove selection border
-                });
-            } else {
-                alert('No previous image to reset to!');
-            }
+        // Clear selections
+        selectedImages = [];
+        Array.from(backgroundContainer.children).forEach(img => {
+            img.style.border = 'none'; // Remove selection border
         });
+    } else if (originalImageSrc) {
+        // If no history, reset to the original image if it exists
+        displayUploadedImage(originalImageSrc);
+
+        // Clear selections
+        selectedImages = [];
+        Array.from(backgroundContainer.children).forEach(img => {
+            img.style.border = 'none'; // Remove selection border
+        });
+    } else {
+        alert('No previous image to reset to!');
+    }
+});
 
         // Load saved images into selector
         async function loadSavedImages() {
