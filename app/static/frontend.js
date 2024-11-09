@@ -1,5 +1,5 @@
  document.addEventListener('DOMContentLoaded', function() {
-  const uploadForm = document.getElementById('uploadForm');
+        const uploadForm = document.getElementById('uploadForm');
         const uploadedImageDiv = document.getElementById('uploadedImage');
         const captureBtn = document.getElementById('captureBtn');
         const video = document.getElementById('video');
@@ -173,6 +173,14 @@ const displayUploadedImage = (imageSrc) => {
                 },
                 body: JSON.stringify({ filename })
             });
+        } else if (effect == 'arcane'){
+                  response = await fetch('/process_arcane', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ filename })
+            });
         } else if (effect === 'anime') {
             response = await fetch('/process_anime', {
                 method: 'POST',
@@ -201,6 +209,8 @@ const displayUploadedImage = (imageSrc) => {
             let processedImgSrc;
             if (effect === 'cyberpunk') {
                 processedImgSrc = `/cyberpunk_output/${data.processed_filename}`;
+            } else if(effect === 'arcane'){
+                processedImgSrc = `/arcane_output/${data.processed_filename}`;
             } else if (effect === 'anime') {
                 processedImgSrc = `/anime_output/${data.processed_filename}`;
             } else {

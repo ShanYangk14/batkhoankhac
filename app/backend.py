@@ -8,6 +8,7 @@ import numpy as np
 from diffusers import StableDiffusionImg2ImgPipeline
 from model.Anime_test_model import transform_images, load_model, check_folder
 from model.cyberpunk_test_model import transform_images_cyberpunk, load_cyberpunk_model, check_folder, process_cyberpunk_image
+from model.arcane_test_model import transform_images_arcane, load_arcane_model, check_folder, process_arcane_image
 from huggingface_hub import login
 
 app = Flask(__name__)
@@ -18,11 +19,13 @@ app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'uploads')
 app.config['SAVED_IMAGES_FOLDER'] = os.path.join(os.getcwd(), 'saved_images')
 app.config['ANIME_OUTPUT_FOLDER'] = os.path.join(os.getcwd(), 'anime_output')
 app.config['CYBERPUNK_OUTPUT_FOLDER'] = os.path.join(os.getcwd(), 'cyberpunk_output')
+app.config['ARCANE_OUTPUT_FOLDER'] = os.path.join(os.getcwd(), 'arcane_output')
 
 UPLOAD_FOLDER = app.config['UPLOAD_FOLDER']
 SAVED_IMAGES_FOLDER = app.config['SAVED_IMAGES_FOLDER']
 ANIME_OUTPUT_FOLDER = app.config['ANIME_OUTPUT_FOLDER']
 CYBERPUNK_OUTPUT_FOLDER = app.config['CYBERPUNK_OUTPUT_FOLDER']
+ARCANE_OUTPUT_FOLDER = app.config['ARCANE_OUTPUT_FOLDER']
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
@@ -30,6 +33,8 @@ if not os.path.exists(SAVED_IMAGES_FOLDER):
     os.makedirs(SAVED_IMAGES_FOLDER)
 if not os.path.exists(CYBERPUNK_OUTPUT_FOLDER):
     os.makedirs(CYBERPUNK_OUTPUT_FOLDER)
+if not os.path.exists(ARCANE_OUTPUT_FOLDER):
+    os.makedirs(ARCANE_OUTPUT_FOLDER)
 
 # Directory for saved images
 SAVED_IMAGES_FOLDER = os.path.join(os.getcwd(), 'saved_images')
@@ -51,10 +56,22 @@ if not os.path.exists(app.config['ANIME_OUTPUT_FOLDER']):
 if not os.path.exists(app.config['CYBERPUNK_OUTPUT_FOLDER']):
     os.makedirs(app.config['CYBERPUNK_OUTPUT_FOLDER'])
 
+if not os.path.exists(app.config['ARCANE_OUTPUT_FOLDER']):
+    os.makedirs(app.config['ARCANE_OUTPUT_FOLDER'])
+
 for folder in [app.config['UPLOAD_FOLDER'], app.config['SAVED_IMAGES_FOLDER'], app.config['CYBERPUNK_OUTPUT_FOLDER']]:
     if not os.path.exists(folder):
         os.makedirs(folder, exist_ok=True)
 PROCESSED_FOLDER = os.path.join(os.getcwd(), 'cyberpunk_output')
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+if not os.path.exists(PROCESSED_FOLDER):
+    os.makedirs(PROCESSED_FOLDER)
+
+for folder in [app.config['UPLOAD_FOLDER'], app.config['SAVED_IMAGES_FOLDER'], app.config['ARCANE_OUTPUT_FOLDER']]:
+    if not os.path.exists(folder):
+        os.makedirs(folder, exist_ok=True)
+PROCESSED_FOLDER = os.path.join(os.getcwd(), 'arcane_output')
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 if not os.path.exists(PROCESSED_FOLDER):
@@ -232,6 +249,8 @@ def save_image():
     # Define paths
     file_path_upload = os.path.join(UPLOAD_FOLDER, filename)
     file_path_anime = os.path.join(ANIME_OUTPUT_FOLDER, filename)
+    file_path_cyberpunk = os.path.join(CYBERPUNK_OUTPUT_FOLDER, filename)
+    file_path_arcane = os.path.join(ARCANE_OUTPUT_FOLDER, filename)
     file_path_saved = os.path.join(SAVED_IMAGES_FOLDER, filename)
 
     response = {}
@@ -253,6 +272,20 @@ def save_image():
         except Exception as e:
             print(f"Error moving image from anime output to saved folder: {e}")
             return jsonify({'error': 'Failed to move image from anime output folder to saved folder'}), 500
+    elif os.path.exists(file_path_cyberpunk):
+        try:
+            os.rename(file_path_cyberpunk, file_path_saved)
+            response['moved_from'] = 'CYBERPUNK_OUTPUT_FOLDER'
+        except Exception as e:
+            print(f"Error moving image from cyberpunk output to saved folder: {e}")
+            return jsonify({'error': 'Failed to move image from cyberpunk output folder to saved folder'}), 500
+    elif os.path.exists(file_path_arcane):
+        try:
+            os.rename(file_path_arcane, file_path_saved)
+            response['moved_from'] = 'ARCANE_OUTPUT_FOLDER'
+        except Exception as e:
+            print(f"Error moving image from arcane output to saved folder: {e}")
+            return jsonify({'error': 'Failed to move image from arcane output folder to saved folder'}), 500
 
     else:
         # If file is in neither folder
@@ -271,7 +304,7 @@ def delete_image():
     file_path_upload = os.path.join(UPLOAD_FOLDER, filename)
     file_path_anime = os.path.join(ANIME_OUTPUT_FOLDER, filename)
     file_path_cyberpunk = os.path.join(CYBERPUNK_OUTPUT_FOLDER, filename)
-
+    file_path_arcane = os.path.join(ARCANE_OUTPUT_FOLDER, filename)
     response = {}
 
     # Attempt to delete file from UPLOAD_FOLDER
@@ -300,9 +333,16 @@ def delete_image():
         except Exception as e:
             print(f"Error deleting image from cyberpunk output folder: {e}")
             response['error_cyberpunk'] = 'Failed to delete from cyberpunk output folder'
-
+    # Attempt to delete file from ARCANE_OUTPUT_FOLDER
+    if os.path.exists(file_path_arcane):
+        try:
+            os.remove(file_path_arcane)
+            response['deleted_from_arcane'] = filename
+        except Exception as e:
+            print(f"Error deleting image from arcane output folder: {e}")
+            response['error_cyberpunk'] = 'Failed to delete from arcane output folder'
     # If file wasn't found in any folder
-    if 'deleted_from_upload' not in response and 'deleted_from_anime' not in response and 'deleted_from_cyberpunk' not in response:
+    if 'deleted_from_upload' not in response and 'deleted_from_anime' not in response and 'deleted_from_cyberpunk' not in response and 'deleted_from_arcane' not in response:
         response['error'] = 'File not found in any folder'
         return jsonify(response), 404
 
@@ -376,6 +416,42 @@ def process_cyberpunk_image():
 def serve_cyberpunk_image(filename):
     # Ensure the correct folder is being served
     return send_from_directory(app.config['CYBERPUNK_OUTPUT_FOLDER'], filename)
+
+def load_arcane_model(model_id="nitrosocke/Arcane-Diffusion", token="HUGGINGFACE_TOKEN"):
+    """Load the Arcane diffusion model."""
+    login(token)  # Ensure login happens here
+    pipe = StableDiffusionImg2ImgPipeline.from_pretrained(model_id)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    pipe = pipe.to(device)
+    return pipe
+
+@app.route('/process_arcane', methods=['POST'])
+def process_arcane_image():
+    data = request.json
+    filename = data.get('filename')
+    img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+
+    if not filename or not os.path.exists(img_path):
+        return jsonify({"error": "Image not found"}), 404
+
+    try:
+        # Ensure the transform function parameters match the intended use for arcane transformation
+        transform_images_arcane(
+            model_dir=app.config.get('ARCANE_MODEL_PATH', 'nitrosocke/Arcane-Diffusion'),
+            image_folder=app.config['UPLOAD_FOLDER'],
+            output_folder=app.config['ARCANE_OUTPUT_FOLDER']
+        )
+
+        # Generate a filename for the processed image to ensure it matches the format you expect
+        output_filename = f"arcane_{filename}"
+        return jsonify({'processed_filename': output_filename}), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to process image: {str(e)}"}), 500
+
+@app.route('/arcane_output/<filename>')
+def serve_arcane_image(filename):
+    # Ensure the correct folder is being served
+    return send_from_directory(app.config['ARCANE_OUTPUT_FOLDER'], filename)
 
 if __name__ == '__main__':
     app.run(debug=True)

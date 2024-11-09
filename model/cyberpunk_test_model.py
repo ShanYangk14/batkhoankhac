@@ -51,8 +51,8 @@ def process_cyberpunk_image(pipe, img_path):
         generated_image_pil = pipe(
             prompt=prompt,
             image=pil_image,  # PIL.Image format
-            strength=0.32,
-            guidance_scale = 6.5
+            strength=0.35,
+            guidance_scale = 6.8
         ).images[0]
         print("Generated image from PIL format.")
 
