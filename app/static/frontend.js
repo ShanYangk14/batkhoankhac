@@ -17,10 +17,12 @@
         const colorOverlay = document.getElementById('colorOverlay');
         const resetBtn = document.getElementById('resetBtn');
         const backgroundSelector = document.getElementById('backgroundSelector');
+        const promptInput = document.getElementById('promptInput');
         let selectedImages = [];
         let previousImages = [];
         let originalImageSrc = null;
 
+        promptInput.style.display = 'none';
          // Add "Anime Style Transfer" to the effect dropdown
         const animeOption = document.createElement('option');
         animeOption.value = 'anime';
@@ -194,6 +196,7 @@ const displayUploadedImage = (imageSrc) => {
 
     const filename = imgElement.src.split('/').pop();
     const effect = effectSelect.value;
+    const prompt = document.getElementById('promptInput').value;
     const color = (effect === 'color') ? colorPicker.value : null;
     const backgroundImage = selectedImages.length > 0 ? selectedImages[0] : null;
 
@@ -204,7 +207,7 @@ const displayUploadedImage = (imageSrc) => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ filename })
+                body: JSON.stringify({ filename, prompt })
             });
         } else if (effect == 'arcane'){
                   response = await fetch('/process_arcane', {
@@ -212,7 +215,7 @@ const displayUploadedImage = (imageSrc) => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ filename })
+                body: JSON.stringify({ filename, prompt })
             });
         } else if (effect === 'anime') {
             response = await fetch('/process_anime', {
@@ -343,6 +346,17 @@ resetBtn.addEventListener('click', () => {
                 backgroundContainer.style.display = 'none';
             }
         });
+
+        effectSelect.addEventListener('change', function() {
+        const selectedEffect = effectSelect.value;
+
+        // Show the prompt input if "cyberpunk" or "arcane" is selected
+        if (selectedEffect === 'cyberpunk' || selectedEffect === 'arcane') {
+            promptInput.style.display = 'block';  // Show the prompt input
+        } else {
+            promptInput.style.display = 'none';  // Hide the prompt input
+        }
+    });
 
         // Randomly select a background image from saved images
 selectBackgroundBtn.addEventListener('click', async () => {

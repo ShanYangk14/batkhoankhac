@@ -25,8 +25,13 @@ def load_arcane_model(model_id="nitrosocke/Arcane-Diffusion"):
     pipe = pipe.to(device)
     return pipe
 
-def process_arcane_image(pipe, img_path):
+def process_arcane_image(pipe, img_path, prompt=None):
     """Generate a subtle arcane-style enhancement for a selfie image."""
+    default_prompt = (
+         "arcane style, rich colors, high contrast, stylized lighting, dramatic shadows"
+    )
+    # Use the user-provided prompt if available, otherwise use the default prompt
+    prompt = prompt or default_prompt
     # Load and preprocess image
     image = cv2.imread(img_path)
     if image is None:
@@ -40,11 +45,6 @@ def process_arcane_image(pipe, img_path):
     # Debugging line to check input image format (PIL format)
     pil_image = Image.fromarray(image)
     print(f"Original image type (PIL): {type(pil_image)}")
-
-    # Define the prompt (description of the art style you want)
-    prompt = (
-        "arcane style, rich colors, high contrast, stylized lighting, dramatic shadows"
-    )
 
     # Apply the Img2Img transformation with the prompt
     with torch.no_grad():
@@ -60,7 +60,7 @@ def process_arcane_image(pipe, img_path):
     arcane_img = np.array(generated_image_pil)
     return arcane_img
 
-def transform_images_arcane(model_dir, image_folder, output_folder):
+def transform_images_arcane(model_dir, image_folder, output_folder, prompt=None):
     """Process each image in the folder using the arcane model."""
     arcane_pipe = load_arcane_model(model_dir)  # Load the Cyberpunk model
     check_folder(output_folder)  # Ensure the output folder exists
@@ -71,7 +71,7 @@ def transform_images_arcane(model_dir, image_folder, output_folder):
     for img_file in image_files:
         img_path = os.path.join(image_folder, img_file)
         # Generate arcane-style image
-        arcane_img = process_arcane_image(arcane_pipe, img_path)
+        arcane_img = process_arcane_image(arcane_pipe, img_path, prompt)
 
         # Check if the image was processed successfully
         if arcane_img is not None:

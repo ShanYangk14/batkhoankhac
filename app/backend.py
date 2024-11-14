@@ -393,6 +393,7 @@ def load_cyberpunk_model(model_id="DGSpitzer/Cyberpunk-Anime-Diffusion", token="
 def process_cyberpunk_image():
     data = request.json
     filename = data.get('filename')
+    prompt = data.get('prompt')
     img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
     if not filename or not os.path.exists(img_path):
@@ -403,7 +404,8 @@ def process_cyberpunk_image():
         transform_images_cyberpunk(
             model_dir=app.config.get('CYBERPUNK_MODEL_PATH', 'DGSpitzer/Cyberpunk-Anime-Diffusion'),
             image_folder=app.config['UPLOAD_FOLDER'],
-            output_folder=app.config['CYBERPUNK_OUTPUT_FOLDER']
+            output_folder=app.config['CYBERPUNK_OUTPUT_FOLDER'],
+            prompt = prompt
         )
 
         # Generate a filename for the processed image to ensure it matches the format you expect
@@ -429,6 +431,7 @@ def load_arcane_model(model_id="nitrosocke/Arcane-Diffusion", token="HUGGINGFACE
 def process_arcane_image():
     data = request.json
     filename = data.get('filename')
+    prompt = data.get('prompt')
     img_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
 
     if not filename or not os.path.exists(img_path):
@@ -439,7 +442,8 @@ def process_arcane_image():
         transform_images_arcane(
             model_dir=app.config.get('ARCANE_MODEL_PATH', 'nitrosocke/Arcane-Diffusion'),
             image_folder=app.config['UPLOAD_FOLDER'],
-            output_folder=app.config['ARCANE_OUTPUT_FOLDER']
+            output_folder=app.config['ARCANE_OUTPUT_FOLDER'],
+            prompt = prompt
         )
 
         # Generate a filename for the processed image to ensure it matches the format you expect
