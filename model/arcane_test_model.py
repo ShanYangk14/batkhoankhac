@@ -51,7 +51,7 @@ def process_arcane_image(pipe, img_path, prompt=None):
         generated_image_pil = pipe(
             prompt=prompt,
             image=pil_image,  # PIL.Image format
-            strength=0.42,
+            strength=0.4,
             guidance_scale = 7.5
         ).images[0]
         print("Generated image from PIL format.")
