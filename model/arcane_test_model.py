@@ -40,7 +40,7 @@ def process_arcane_image(pipe, img_path, prompt=None):
 
     # Convert image to RGB and resize to 512x512 (default size for diffusion models)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    image = cv2.resize(image, (512, 512))
+    image = cv2.resize(image, (640, 480))
 
     # Debugging line to check input image format (PIL format)
     pil_image = Image.fromarray(image)

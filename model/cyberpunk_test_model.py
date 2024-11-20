@@ -40,7 +40,7 @@ def process_cyberpunk_image(pipe, img_path, prompt=None):
         return None
 
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    image = cv2.resize(image, (512, 512))
+    image = cv2.resize(image, (640, 480))
 
     pil_image = Image.fromarray(image)
 
