@@ -52,8 +52,10 @@
     <!-- Color Picker and Background Image Selector -->
     <div class="centered-controls">
         <input type="color" id="colorPicker">
+        <div id="colorOverlay"></div>
         <input type="file" id="backgroundImageInput" accept="image/*">
-        <button id="selectBackgroundBtn">Select Background</button>
+        <div id="backgroundContainer"></div>
+       <button id="selectBackgroundBtn" style="display: none;">Select Background</button>
         <input type="text" id="promptInput" placeholder="Nhập tag(funny, cool,...) ">
     </div>
 

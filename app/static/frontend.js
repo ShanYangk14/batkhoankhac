@@ -301,27 +301,6 @@ resetBtn.addEventListener('click', () => {
     }
 });
 
-        // Load saved images into selector
-        async function loadSavedImages() {
-            try {
-                const response = await fetch('/saved_images');
-                const data = await response.json();
-                if (response.ok) {
-                    backgroundSelector.innerHTML = ''; // Clear previous options
-                    data.saved_images.forEach(image => {
-                        const option = document.createElement('option');
-                        option.value = image;
-                        option.textContent = image;
-                        backgroundSelector.appendChild(option);
-                    });
-                } else {
-                    console.error('Error loading saved images:', data.error);
-                }
-            } catch (error) {
-                console.error('Error fetching saved images:', error);
-            }
-        }
-
         // Show/Hide Select Background Button based on effect selection
         effectSelect.addEventListener('change', () => {
             if (effectSelect.value === 'background') {
@@ -423,5 +402,5 @@ selectBackgroundBtn.addEventListener('click', async () => {
         console.error('Error processing image:', result.error);
     }
 };
-        loadSavedImages(); // Call to load saved images on page load
+
 });
