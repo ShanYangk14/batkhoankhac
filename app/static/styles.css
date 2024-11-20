@@ -121,3 +121,18 @@ button:hover {
     padding: 10px;
     font-size: 16px;
 }
+
+#backgroundContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 20px auto;
+    width: 700px; /* Adjust width as needed */
+    height: 500px; /* Adjust height as needed */
+    border: 2px solid #5a9;
+    border-radius: 10px;
+    background-color: #f0f8ff; /* Light blue for a clean look */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+}
