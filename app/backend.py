@@ -381,7 +381,7 @@ def process_anime_image():
 def anime_output_file(filename):
     return send_from_directory(app.config['ANIME_OUTPUT_FOLDER'], filename)
 
-def load_cyberpunk_model(model_id="DGSpitzer/Cyberpunk-Anime-Diffusion", token="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"):
+def load_cyberpunk_model(model_id="DGSpitzer/Cyberpunk-Anime-Diffusion", token="HUGGING_FACE_TOKEN"):
     """Load the Cyberpunk diffusion model."""
     login(token)  # Ensure login happens here
     pipe = StableDiffusionImg2ImgPipeline.from_pretrained(model_id)
@@ -419,7 +419,7 @@ def serve_cyberpunk_image(filename):
     # Ensure the correct folder is being served
     return send_from_directory(app.config['CYBERPUNK_OUTPUT_FOLDER'], filename)
 
-def load_arcane_model(model_id="nitrosocke/Arcane-Diffusion", token="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"):
+def load_arcane_model(model_id="nitrosocke/Arcane-Diffusion", token="HUGGING_FACE_TOKEN"):
     """Load the Arcane diffusion model."""
     login(token)  # Ensure login happens here
     pipe = StableDiffusionImg2ImgPipeline.from_pretrained(model_id)

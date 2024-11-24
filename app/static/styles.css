@@ -111,8 +111,33 @@ button:hover {
     gap: 10px;
     margin-top: 20px;
 }
-#colorPicker, #backgroundImageInput, #promptInput, #selectBackgroundBtn {
+#colorPicker, #backgroundImageInput, #promptInput {
     display: none;
+}
+
+#selectBackgroundBtn {
+    display: none;
+    margin: 10px auto;
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #5a9;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#selectBackgroundBtn:hover {
+    background-color: #489;
+}
+
+.background-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
 }
 
 #promptInput {
@@ -123,12 +148,12 @@ button:hover {
 }
 
 #backgroundContainer {
-    display: flex;
+    display: none;
     justify-content: center;
     align-items: center;
     margin: 20px auto;
-    width: 700px; /* Adjust width as needed */
-    height: 500px; /* Adjust height as needed */
+    width: 300px; /* Adjust width as needed */
+    height: 300px; /* Adjust height as needed */
     border: 2px solid #5a9;
     border-radius: 10px;
     background-color: #f0f8ff; /* Light blue for a clean look */
